@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - AI 智能求职助手</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;display:flex;justify-content:center;align-items:center}
+        .login-container{width:400px;max-width:90%;background:#fff;border-radius:20px;padding:40px;box-shadow:0 15px 40px rgba(0,0,0,.2)}
+        .logo{text-align:center;font-size:42px;margin-bottom:10px}
+        .title{text-align:center;font-size:26px;font-weight:600;color:#333;margin-bottom:8px}
+        .subtitle{text-align:center;color:#999;font-size:14px;margin-bottom:30px}
+        .form-group{margin-bottom:20px}
+        .form-group label{display:block;font-size:14px;color:#555;margin-bottom:8px}
+        .form-group input{width:100%;padding:13px 16px;border:1px solid #ddd;border-radius:10px;font-size:14px;outline:none;transition:all .3s}
+        .form-group input:focus{border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,.1)}
+        .login-btn{width:100%;padding:13px;border:0;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:opacity .3s}
+        .login-btn:hover{opacity:.9}.login-btn:disabled{opacity:.5;cursor:not-allowed}
+        .message{min-height:20px;text-align:center;font-size:14px;margin-top:15px}.message.success{color:#28a745}.message.error{color:#dc3545}
+        .register-link{text-align:center;margin-top:25px;color:#999;font-size:14px}
+        .register-link a{color:#667eea;text-decoration:none;font-weight:600}.register-link a:hover{text-decoration:underline}
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <div class="logo">🤖</div>
+    <div class="title">AI 智能求职助手</div>
+    <div class="subtitle">登录你的求职助手账号</div>
+
+    <div class="form-group">
+        <label for="username">用户名</label>
+        <input type="text" id="username" placeholder="请输入用户名" autocomplete="username">
+    </div>
+
+    <div class="form-group">
+        <label for="password">密码</label>
+        <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()">
+    </div>
+
+    <button class="login-btn" id="loginBtn" onclick="login()">登录</button>
+    <div class="message" id="message"></div>
+
+    <div class="register-link">还没有账号？<a href="register.html">立即注册</a></div>
+</div>
+
+<script>
+    async function login(){
+        const usernameInput=document.getElementById('username');
+        const passwordInput=document.getElementById('password');
+        const loginBtn=document.getElementById('loginBtn');
+        const username=usernameInput.value.trim();
+        const password=passwordInput.value;
+
+        if(!username){
+            showMessage('请输入用户名','error');
+            usernameInput.focus();
+            return;
+        }
+        if(!password){
+            showMessage('请输入密码','error');
+            passwordInput.focus();
+            return;
+        }
+
+        loginBtn.disabled=true;
+        loginBtn.textContent='登录中...';
+        document.getElementById('message').textContent='';
+
+        try{
+            const url=`http://localhost:9090/agent/login?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+            const response=await fetch(url);
+            if(!response.ok)throw new Error('服务器请求失败');
+
+            const data=await response.json();
+            console.log('登录返回数据：',data);
+
+            if(data.success){
+                localStorage.setItem('id',String(data.id));
+                showMessage('登录成功，正在进入 AI 助手...','success');
+                setTimeout(()=>location.href='chat.html',500);
+            }else{
+                showMessage(data.message||'登录失败','error');
+            }
+        }catch(error){
+            console.error('登录错误：',error);
+            showMessage('无法连接服务器，请确认 Spring Boot 已启动。','error');
+        }finally{
+            loginBtn.disabled=false;
+            loginBtn.textContent='登录';
+        }
+    }
+
+    function showMessage(text,type){
+        const messageDiv=document.getElementById('message');
+        messageDiv.textContent=text;
+        messageDiv.className='message '+type;
+    }
+</script>
+</body>
+</html>

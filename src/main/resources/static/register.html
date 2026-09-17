@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册 - AI 智能求职助手</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;display:flex;justify-content:center;align-items:center}
+        .register-container{width:400px;max-width:90%;background:#fff;border-radius:20px;padding:40px;box-shadow:0 15px 40px rgba(0,0,0,.2)}
+        .logo{text-align:center;font-size:42px;margin-bottom:10px}
+        .title{text-align:center;font-size:26px;font-weight:600;color:#333;margin-bottom:8px}
+        .subtitle{text-align:center;color:#999;font-size:14px;margin-bottom:30px}
+        .form-group{margin-bottom:20px}
+        .form-group label{display:block;font-size:14px;color:#555;margin-bottom:8px}
+        .form-group input{width:100%;padding:13px 16px;border:1px solid #ddd;border-radius:10px;font-size:14px;outline:none;transition:all .3s}
+        .form-group input:focus{border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,.1)}
+        .register-btn{width:100%;padding:13px;border:0;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:16px;font-weight:600;cursor:pointer;transition:opacity .3s}
+        .register-btn:hover{opacity:.9}.register-btn:disabled{opacity:.5;cursor:not-allowed}
+        .message{min-height:20px;text-align:center;font-size:14px;margin-top:15px}.message.success{color:#28a745}.message.error{color:#dc3545}
+        .login-link{text-align:center;margin-top:25px;color:#999;font-size:14px}
+        .login-link a{color:#667eea;text-decoration:none;font-weight:600}.login-link a:hover{text-decoration:underline}
+    </style>
+</head>
+<body>
+<div class="register-container">
+    <div class="logo">🤖</div>
+    <div class="title">创建账号</div>
+    <div class="subtitle">注册 AI 智能求职助手</div>
+
+    <div class="form-group">
+        <label for="username">用户名</label>
+        <input type="text" id="username" placeholder="请输入用户名" autocomplete="username">
+    </div>
+
+    <div class="form-group">
+        <label for="password">密码</label>
+        <input type="password" id="password" placeholder="请输入密码" autocomplete="new-password">
+    </div>
+
+    <div class="form-group">
+        <label for="confirmPassword">确认密码</label>
+        <input type="password" id="confirmPassword" placeholder="请再次输入密码" autocomplete="new-password" onkeydown="if(event.key==='Enter')register()">
+    </div>
+
+    <button class="register-btn" id="registerBtn" onclick="register()">注册</button>
+    <div class="message" id="message"></div>
+
+    <div class="login-link">已经有账号？<a href="login.html">返回登录</a></div>
+</div>
+
+<script>
+    async function register(){
+        const usernameInput=document.getElementById('username');
+        const passwordInput=document.getElementById('password');
+        const confirmPasswordInput=document.getElementById('confirmPassword');
+        const registerBtn=document.getElementById('registerBtn');
+        const username=usernameInput.value.trim();
+        const password=passwordInput.value;
+        const confirmPassword=confirmPasswordInput.value;
+
+        if(!username){
+            showMessage('请输入用户名','error');
+            usernameInput.focus();
+            return;
+        }
+        if(!password){
+            showMessage('请输入密码','error');
+            passwordInput.focus();
+            return;
+        }
+        if(password.length<6){
+            showMessage('密码长度不能少于6位','error');
+            passwordInput.focus();
+            return;
+        }
+        if(password!==confirmPassword){
+            showMessage('两次输入的密码不一致','error');
+            confirmPasswordInput.focus();
+            return;
+        }
+
+        registerBtn.disabled=true;
+        registerBtn.textContent='注册中...';
+        document.getElementById('message').textContent='';
+
+        try{
+            const url=`http://localhost:9090/agent/register?username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+            const response=await fetch(url);
+            if(!response.ok)throw new Error('服务器请求失败');
+
+            const result=await response.text();
+            console.log('注册返回：',result);
+
+            if(result==='注册成功'){
+                showMessage('注册成功！正在跳转登录页面...','success');
+                setTimeout(()=>location.href='login.html',800);
+            }else{
+                showMessage(result,'error');
+            }
+        }catch(error){
+            console.error('注册错误：',error);
+            showMessage('无法连接服务器，请确认 Spring Boot 已启动。','error');
+        }finally{
+            registerBtn.disabled=false;
+            registerBtn.textContent='注册';
+        }
+    }
+
+    function showMessage(text,type){
+        const messageDiv=document.getElementById('message');
+        messageDiv.textContent=text;
+        messageDiv.className='message '+type;
+    }
+</script>
+</body>
+</html>
